@@ -50,14 +50,24 @@ class CapacityRepository:
                     "date_to": date_to,
                 },
             )
-            rows: List[Row] = [
-                (
-                    r["corridor"],
-                    r["week_start_date"],
-                    int(r["offered_teu"]),
-                    float(r["rolling_avg_4w"]),
-                )
-                for r in result.mappings()
-            ]
-        return rows
+            rows: List[Row] = []
+            for r in result.mappings():
+                wk = r["week_start_date"]
+                if isinstance(wk, str):
+                    # SQLite may return DATE as TEXT; normalize to date
+                    from datetime import date as _date
 
+                    try:
+                        wk = _date.fromisoformat(wk)
+                    except Exception:
+                        # Fallback: leave as-is; service will reject if unusable
+                        pass
+                rows.append(
+                    (
+                        r["corridor"],
+                        wk,
+                        int(r["offered_teu"]),
+                        float(r["rolling_avg_4w"]),
+                    )
+                )
+        return rows
