@@ -1,0 +1,2 @@
+"""Capacity service application package."""
+
