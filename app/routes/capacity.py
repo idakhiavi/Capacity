@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from datetime import date
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from ..config import get_engine
 from ..models.schemas import CapacityResponse
 from ..repositories.capacity_repository import CapacityRepository
-from ..services.capacity_service import CapacityService
+from ..services.capacity_service import CapacityService, ValidationError
 
 
 router = APIRouter(prefix="/capacity", tags=["capacity"])
@@ -25,5 +25,7 @@ def read_capacity(
 ):
     # Corridor is fixed per task requirements; alias map normalizes internally
     corridor = "ASIA-EUR"
-    return service.get_capacity(corridor=corridor, date_from=date_from, date_to=date_to)
-
+    try:
+        return service.get_capacity(corridor=corridor, date_from=date_from, date_to=date_to)
+    except ValidationError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))

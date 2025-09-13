@@ -28,27 +28,72 @@ def aggregate(csv_path: Path) -> Dict[Tuple[str, datetime.date], int]:
     """Aggregate per (corridor, week_start_date) using sailing-level rows.
 
     Expects columns: ORIGIN, DESTINATION, ORIGIN_AT_UTC, OFFERED_CAPACITY_TEU.
+    If the following identifiers are present, de-duplicate by their combination
+    and use the latest ORIGIN_AT_UTC per unique id before aggregating:
+      - service_version_and_roundtrip_identfiers
+      - origin_service_version_and_master
+      - destination_service_version_and_master
     """
     agg: Dict[Tuple[str, datetime.date], int] = defaultdict(int)
     with csv_path.open(newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
-        for r in reader:
-            origin = (r.get("ORIGIN") or "").strip()
-            dest = (r.get("DESTINATION") or "").strip()
-            timestamp = r.get("ORIGIN_AT_UTC") or ""
-            teu_raw = r.get("OFFERED_CAPACITY_TEU") or "0"
-            if not origin or not dest or not timestamp:
-                continue
+        rows = list(reader)
+
+    # Normalize header keys for presence checks (case-sensitive as per provided sample)
+    id_keys = [
+        "service_version_and_roundtrip_identfiers",
+        "origin_service_version_and_master",
+        "destination_service_version_and_master",
+    ]
+    has_ids = all(k in rows[0] for k in id_keys) if rows else False
+
+    def parse_dt(ts: str) -> datetime | None:
+        try:
             try:
-                try:
-                    dt = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-                except ValueError:
-                    dt = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
-                teu = int(float(teu_raw))
-            except Exception:
+                return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
+            except ValueError:
+                return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            return None
+
+    if has_ids:
+        # Deduplicate by unique id → keep row with latest origin departure timestamp
+        latest_by_uid = {}
+        for r in rows:
+            uid = (
+                (r.get(id_keys[0]) or "").strip(),
+                (r.get(id_keys[1]) or "").strip(),
+                (r.get(id_keys[2]) or "").strip(),
+            )
+            ts = (r.get("ORIGIN_AT_UTC") or "").strip()
+            dt = parse_dt(ts)
+            if not dt:
                 continue
-            corridor = f"{origin}-{dest}"
-            agg[(corridor, week_start(dt))] += teu
+            prev = latest_by_uid.get(uid)
+            if (prev is None) or (dt > prev[0]):
+                latest_by_uid[uid] = (dt, r)
+
+        rows_iter = (rec for (_dt, rec) in latest_by_uid.values())
+    else:
+        # Fallback: use all rows
+        rows_iter = iter(rows)
+
+    for r in rows_iter:
+        origin = (r.get("ORIGIN") or "").strip()
+        dest = (r.get("DESTINATION") or "").strip()
+        ts = (r.get("ORIGIN_AT_UTC") or "").strip()
+        teu_raw = r.get("OFFERED_CAPACITY_TEU") or "0"
+        if not origin or not dest or not ts:
+            continue
+        dt = parse_dt(ts)
+        if not dt:
+            continue
+        try:
+            teu = int(float(teu_raw))
+        except Exception:
+            continue
+        corridor = f"{origin}-{dest}"
+        agg[(corridor, week_start(dt))] += teu
     return agg
 
 
@@ -91,4 +136,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
