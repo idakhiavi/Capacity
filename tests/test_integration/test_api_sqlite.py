@@ -2,6 +2,7 @@ from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
+from sqlalchemy.pool import StaticPool
 
 from app.main import create_app
 from app.routes.capacity import get_service
@@ -10,7 +11,14 @@ from app.services.capacity_service import CapacityService
 
 
 def make_sqlite_engine():
-    return create_engine("sqlite+pysqlite:///:memory:", future=True)
+    # Use StaticPool to ensure the same in-memory DB is reused across connections
+    # so the seeded data remains visible to the app under test.
+    return create_engine(
+        "sqlite+pysqlite:///:memory:",
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
 
 
 def seed(conn):
@@ -65,4 +73,3 @@ def test_capacity_endpoint_sqlite():
     # Validate schema keys present
     for p in points:
         assert set(["week_start_date", "week_no", "offered_capacity_teu", "rolling_avg_4w"]).issubset(p.keys())
-
