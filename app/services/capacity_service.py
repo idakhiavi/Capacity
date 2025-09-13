@@ -32,7 +32,6 @@ class CapacityService:
                     week_start_date=wk,
                     week_no=iso.week,
                     offered_capacity_teu=teu,
-                    rolling_avg_4w=round(avg, 2),
                 )
             )
         return CapacityResponse(corridor=corridor, points=points)

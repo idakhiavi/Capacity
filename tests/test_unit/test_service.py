@@ -30,7 +30,6 @@ def test_service_filters_buffer_and_rounds():
     # ISO week numbers for 2024-01-01 is week 1
     assert resp.points[0].week_no >= 1
     assert resp.points[0].offered_capacity_teu == 120
-    assert resp.points[0].rolling_avg_4w == 105.0
 
 
 def test_validation_rejects_bad_range():

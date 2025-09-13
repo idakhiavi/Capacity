@@ -71,6 +71,6 @@ def test_capacity_endpoint_sqlite():
     points = data["points"]
     # Expect 5 weekly points between 2024-01-15 and 2024-02-12 inclusive
     assert len(points) == 5
-    # Validate schema keys present
+    # Validate schema keys present (rolling avg is internal-only)
     for p in points:
-        assert set(["week_start_date", "week_no", "offered_capacity_teu", "rolling_avg_4w"]).issubset(p.keys())
+        assert set(["week_start_date", "week_no", "offered_capacity_teu"]).issubset(p.keys())
