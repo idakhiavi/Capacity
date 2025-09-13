@@ -34,7 +34,7 @@ def test_capacity_endpoint_mysql():
                 """
             ))
         data = [
-            (corridor, start + timedelta(days=7 * i), 100 + 10 * i) for i in range(6)
+            (corridor, start + timedelta(days=7 * i), 100 + 10 * i) for i in range(7)
         ]
         for c, d, teu in data:
             conn.execute(text("INSERT INTO weekly_capacity VALUES (:c, :d, :t)"), {"c": c, "d": d, "t": teu})
@@ -57,4 +57,3 @@ def test_capacity_endpoint_mysql():
     assert r.status_code == 200, r.text
     data = r.json()
     assert len(data["points"]) >= 4
-

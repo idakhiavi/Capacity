@@ -33,8 +33,9 @@ def seed(conn):
     ))
     corridor = "china_main-north_europe_main"  # canonical stored value
     start = date(2024, 1, 1)
+    # Seed 7 weeks so the requested end week (2024-02-12) exists
     data = [
-        (corridor, start + timedelta(days=7 * i), 100 + 10 * i) for i in range(6)
+        (corridor, start + timedelta(days=7 * i), 100 + 10 * i) for i in range(7)
     ]
     for c, d, teu in data:
         conn.execute(text("INSERT INTO weekly_capacity VALUES (:c, :d, :t)"), {"c": c, "d": d, "t": teu})
