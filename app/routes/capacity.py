@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..config import get_engine
 from ..models.schemas import CapacityResponse
@@ -17,10 +17,15 @@ def get_service() -> CapacityService:
     return CapacityService(repo=repo)
 
 
-@router.get("", response_model=CapacityResponse)
+@router.get(
+    "",
+    response_model=CapacityResponse,
+    summary="Weekly capacity with 4-week rolling average",
+    tags=["capacity"],
+)
 def read_capacity(
-    date_from: date,
-    date_to: date,
+    date_from: date = Query(..., description="Start date (YYYY-MM-DD) inclusive"),
+    date_to: date = Query(..., description="End date (YYYY-MM-DD) inclusive"),
     service: CapacityService = Depends(get_service),
 ):
     # Corridor is fixed per task requirements; alias map normalizes internally

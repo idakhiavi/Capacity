@@ -129,6 +129,8 @@ def load_data(agg: Dict[Tuple[str, datetime.date], int], truncate: bool = False)
 def main() -> None:
     args = parse_args()
     csv_path = Path(args.csv)
+    if not csv_path.exists():
+        raise SystemExit(f"CSV not found at {csv_path}. Provide --csv PATH or place sailing_level_raw.csv in repo root.")
     agg = aggregate(csv_path)
     load_data(agg, truncate=args.truncate)
     print(f"Loaded {len(agg)} weekly rows from {csv_path}")
