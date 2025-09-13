@@ -13,11 +13,10 @@ pip install -r requirements.txt | Out-Null
 
 # Ensure schema and load data
 if ($Recreate) {
-  python .\scripts\load_weekly_capacity.py --csv $CsvPath --truncate
+  python -m scripts.load_weekly_capacity --csv $CsvPath --truncate
 } else {
-  python .\scripts\load_weekly_capacity.py --csv $CsvPath
+  python -m scripts.load_weekly_capacity --csv $CsvPath
 }
 
 # Run the app
 uvicorn app.main:app --reload
-

@@ -8,4 +8,7 @@ Current Progress
 - Implemented repository with SQL 4-week rolling average and service layer with validation; added unit tests.
 - Set API models to include `week_no` and `offered_capacity_teu` to align with task wording.
 - Wired `/capacity` endpoint (date_from, date_to) and added SQLite integration test with DI override.
- - Added data loader script (`scripts/load_weekly_capacity.py`) and dev helper (`scripts/dev_run.ps1`).
+- Added data loader script (`scripts/load_weekly_capacity.py`) and dev helper (`scripts/dev_run.ps1`).
+- Enhanced CSV loader to deduplicate by unique identifiers when present and use latest origin departure.
+- Added Dockerfile and entrypoint for simple containerized runs; optional MySQL integration test.
+ - Added pytest config and CI workflow; see USAGE.md for quickstart.

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests-sqlite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Smoke: run app and hit /health
+        run: |
+          set -e
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          PID=$!
+          sleep 2
+          curl -sf http://127.0.0.1:8000/health
+          kill $PID
+      - name: Run unit and sqlite integration tests
+        run: pytest -q
+
+  tests-mysql:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -ppassword"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run MySQL integration test
+        env:
+          DATABASE_URL: mysql+pymysql://root:password@127.0.0.1:3306/test
+        run: pytest -q tests/test_integration/test_api_mysql.py -q
