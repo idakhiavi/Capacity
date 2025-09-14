@@ -4,20 +4,19 @@ import logging
 import os
 from typing import Optional
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 
 
 class Settings(BaseSettings):
     app_name: str = "capacity-service"
-    database_url: str = os.getenv("DATABASE_URL", "sqlite+pysqlite:///./.data.sqlite")
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
-    corridor_alias_file: str = os.getenv("CORRIDOR_ALIAS_FILE", "config/corridor_aliases.json")
+    database_url: str = "sqlite+pysqlite:///./.data.sqlite"
+    log_level: str = "INFO"
+    corridor_alias_file: str = "config/corridor_aliases.json"
 
-    class Config:
-        env_prefix = ""
-        case_sensitive = False
+    # pydantic-settings v2 style config: load environment variables and .env file
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
 
 
 _engine: Optional[Engine] = None
@@ -80,4 +79,3 @@ def get_alias_map(settings: Optional[Settings] = None) -> dict:
     return {
         "ASIA-EUR": "china_main-north_europe_main",
     }
-

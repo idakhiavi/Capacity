@@ -16,12 +16,34 @@ Quickstart
      `docker run --rm -p 8000:8000 -e LOAD_CSV_ON_START=1 -e CSV_PATH=/app/sailing_level_raw.csv -v "$pwdPath:/app" capacity-service`
   3) Try a request: `http://127.0.0.1:8000/capacity?date_from=2024-01-15&date_to=2024-02-12`
   Notes:
+  - Entry point uses POSIX `sh` (no Bash required). If you saw errors like `set: pipefail` or `$'\r': command not found`, rebuild the image after pulling latest changes.
+  - The repo includes a `.gitattributes` to normalize line endings (LF for `.sh`, CRLF for `.ps1`). If you still hit line-ending issues, run a clean checkout.
+  Notes:
   - Entry point uses POSIX `sh` (no Bash required). If you ever saw a `set: pipefail` error, rebuild the image to pick up the fix.
 
 Dependencies
 - Windows PowerShell (recommended) or any shell
 - Python 3.11+
 - Docker Desktop (optional, for containerized runs)
+
+Environment (.env)
+- Create a `.env` file at the repo root to override defaults. Example:
+```
+# App and logging
+LOG_LEVEL=INFO
+
+# Database (defaults to local SQLite file if unset)
+DATABASE_URL=sqlite+pysqlite:///./.data.sqlite
+
+# Corridor alias map (optional)
+CORRIDOR_ALIAS_FILE=config/corridor_aliases.json
+
+# Docker entrypoint options (optional)
+LOAD_CSV_ON_START=1
+CSV_PATH=/app/sailing_level_raw.csv
+```
+- Locally, the app reads `.env` automatically via pydantic-settings.
+- With Docker, you can pass the file using `--env-file .env`.
 
 Health Check
 - `GET /health` → `{ "status": "ok" }`

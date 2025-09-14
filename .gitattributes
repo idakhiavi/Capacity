@@ -1,0 +1,10 @@
+* text=auto
+
+# Ensure shell scripts and Python files use LF (Linux-friendly)
+*.sh text eol=lf
+*.py text eol=lf
+docker/* text eol=lf
+
+# Keep Windows PowerShell scripts with CRLF
+scripts/*.ps1 text eol=crlf
+
